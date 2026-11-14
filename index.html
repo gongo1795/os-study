@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>운영체제 공부</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>운영체제 공부</h1>
+  <p class="sub">장별 한 장 요약 + 문제풀이. 풀이 기록·⭐ 중요·📝 메모는 이 브라우저에 자동 저장돼요.</p>
+
+  <h2>중간고사 범위 (1~5장)</h2>
+  <p class="small muted">기말에도 포함돼요. 문제는 1~5장 합본 한 페이지에 중요한 것만 모았어요.</p>
+  <div class="cards" id="mid"></div>
+  <p style="margin-top:10px"><a class="btn primary" href="quiz/mid-1-5.html" style="text-decoration:none">1~5장 합본 문제 풀기</a> <span class="small muted" id="midprog"></span></p>
+
+  <h2>기말 추가 범위 (6장~)</h2>
+  <p class="small muted">기말 비중이 큰 부분이에요. 장마다 문제 페이지가 따로 있고, 계산 문제는 각 페이지 맨 뒤에 있어요.</p>
+  <div class="cards" id="fin"></div>
+
+  <div class="foot">
+    문제 출처: 교재 각 장 연습문제. 홀수 객관식 정답은 연습문제 해답 파일 기준, 짝수·서술형은 교재를 보고 직접 푼 풀이(“직접 풀이” 표시)예요.
+    ‘교재 예제로 만든 연습문제’는 교재 예제 숫자나 새 숫자로 만든 계산 연습이에요.
+  </div>
+</div>
+<script src="assets/chapters.js"></script>
+<script>
+(function () {
+  var all = {};
+  try { for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); if (k && k.indexOf("osq:v1:") === 0) all[k.slice(7)] = JSON.parse(localStorage.getItem(k)); } } catch (e) {}
+  function prog(chs) {
+    var done = 0, star = 0, memo = 0;
+    Object.keys(all).forEach(function (id) {
+      var ch = +id.split("-")[0]; if (chs.indexOf(ch) < 0) return;
+      var r = all[id] || {}; if (r.correct != null) done++; if (r.star) star++; if (r.memo && r.memo.trim()) memo++;
+    });
+    return "푼 문제 " + done + " · ⭐ " + star + " · 📝 " + memo;
+  }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  (window.OS_CHAPTERS || []).forEach(function (c) {
+    var box = document.getElementById(c.range === "mid" ? "mid" : "fin");
+    var d = document.createElement("div"); d.className = "card";
+    var links = "";
+    if (c.summary) links += '<a href="' + esc(c.summary) + '">한 장 요약</a>';
+    if (c.quiz && c.range !== "mid") links += '<a href="' + esc(c.quiz) + '">문제 풀기</a>';
+    d.innerHTML = '<h3>' + c.ch + '장 ' + esc(c.title) + '</h3>' +
+      (c.range !== "mid" ? '<div class="prog">' + prog([c.ch]) + '</div>' : '') +
+      '<div class="links">' + links + '</div>';
+    box.appendChild(d);
+  });
+  var mids = (window.OS_CHAPTERS || []).filter(function (c) { return c.range === "mid"; }).map(function (c) { return c.ch; });
+  document.getElementById("midprog").textContent = prog(mids);
+})();
+</script>
+</body>
+</html>

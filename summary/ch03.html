@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>3장 요약 · 프로세스</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="wrap">
+  <nav class="topnav"><a href="../index.html">← 홈</a><a href="ch02.html">← 2장</a><a href="../quiz/mid-1-5.html">3장 문제 풀기</a><a href="ch04.html">4장 →</a><button class="btn noprint" type="button" onclick="window.print()" style="margin-left:auto">인쇄 / PDF</button></nav>
+  <article class="sheet">
+    <span class="pill">중간 + 기말 범위</span>
+    <h1>3장 프로세스</h1>
+    <p class="sub">실행 중인 프로그램(프로세스)을 운영체제가 어떻게 관리하는지</p>
+
+<div class="flow"><span>프로그램(파일)</span><i>→ 메모리에 올라옴 →</i><span>프로세스</span><i>→</i><span>PCB로 관리</span><i>→</i><span>상태가 바뀌며 실행</span></div>
+
+<h2>1. 프로그램 vs 프로세스</h2>
+<ul class="tight">
+<li><b>프로그램</b>: 저장장치에 있는 정적인 파일. <b>프로세스</b>: <mark>메모리에 적재되어 실행 중인 동적인 상태</mark>.</li>
+<li><b>PCB</b>(프로세스 제어 블록) = 프로세스 정보 카드. 프로세스 번호(PID), 상태, 우선순위, 프로그램 카운터(어디까지 했나), 메모리 정보 등. OS가 <b>커널 영역</b>에 보관.</li>
+</ul>
+
+<h2>2. 프로세스 상태 (그림으로 외우기)</h2>
+<div class="flow"><span>생성</span><i>→</i><span>준비</span><i>⇄</i><span>실행</span><i>→</i><span>완료</span></div>
+<div class="flow"><span>실행</span><i>→ 입출력 요청 →</i><span>대기</span><i>→ 입출력 끝 →</i><span>준비</span></div>
+<ul class="tight">
+<li>준비 → 실행: CPU를 받음(디스패치). 실행 → 준비: <mark>타임아웃</mark>(타임 슬라이스를 다 씀).</li>
+<li>실행 → 대기: 입출력 요청. 대기 → <mark>준비</mark>(바로 실행 아님!): 입출력 완료 인터럽트.</li>
+<li>활성 상태 = 생성·준비·실행·대기·완료. <b>휴식</b>(메모리에 있지만 잠깐 멈춤) vs <b>보류</b>(메모리 밖 스왑 영역으로 쫓겨남).</li>
+</ul>
+
+<h2>3. 문맥 교환</h2>
+<p class="def"><b>문맥 교환</b> = CPU를 쓰는 프로세스를 바꿀 때, 지금 프로세스의 상태를 PCB에 저장하고 다음 프로세스의 PCB를 불러오는 것.</p>
+<p>교환하는 동안엔 실제 일을 못 함(오버헤드). → 타임 슬라이스를 <mark>너무 작게 하면 문맥 교환이 많아져 손해</mark>. 타임 슬라이스 크기는 문맥 교환 오버헤드를 기준으로 정함.</p>
+
+<h2>4. 프로세스의 메모리 구조</h2>
+<div class="tbl"><table>
+<tr><th>영역</th><th>들어가는 것</th></tr>
+<tr><td>코드</td><td>프로그램 본문(기계어)</td></tr>
+<tr><td>데이터</td><td>전역 변수·정적 변수</td></tr>
+<tr><td>힙</td><td>malloc()으로 빌리고 <mark>free()</mark>로 돌려주는 동적 공간</td></tr>
+<tr><td>스택</td><td>지역 변수, <mark>함수 호출 후 돌아갈 주소</mark></td></tr>
+</table></div>
+
+<h2>5. 프로세스 만들기: fork()와 exec()</h2>
+<ul class="tight">
+<li><b>fork()</b>: 나를 복사해서 자식 프로세스를 만듦. 반환값 → <mark>자식에게 0</mark>, 부모에게 자식 PID(양수), 실패 시 -1.</li>
+<li>PID(내 번호), PPID(부모 번호), CPID(자식 번호). 부모의 CPID = 자식의 PID, <mark>새로 만든 자식의 CPID = -1</mark>(자식이 없음).</li>
+<li><b>exec()</b>: 껍데기(PID·PCB)는 그대로, 안의 코드만 다른 프로그램으로 교체.</li>
+<li><b>exit()</b>: 자식이 부모에게 "나 끝났어" 알림. <b>wait()</b>: 부모가 자식이 끝날 때까지 기다림.</li>
+<li>유닉스의 모든 프로세스 조상 = <mark>init</mark>(PID 1). 나머지는 init에서 fork()로 생김.</li>
+<li><b>고아 프로세스</b>: 부모가 먼저 끝남(init이 입양). <b>좀비 프로세스</b>: 자식은 끝났는데 부모가 모름. 둘 다 exit()/wait()로 방지.</li>
+</ul>
+
+<div class="box exam"><div class="ttl">★ 시험 포인트</div>
+<ul class="tight">
+<li>상태 전이: 입출력 요청 → 대기, 입출력 끝 → 준비, 타임아웃 → 준비</li>
+<li>fork() 반환값(자식 0), CPID(새 자식 -1), 모든 프로세스의 조상 = init</li>
+<li>좀비(부모가 모름) vs 고아(부모가 먼저 끝남), 보류 vs 휴식</li>
+<li>힙 = malloc/free, 스택 = 함수 호출·복귀 주소</li>
+</ul></div>
+
+    <div class="foot">근거: 수업 교재 3장 본문·장 끝 요약·연습문제, 연습문제 해답(홀수). <mark>형광펜</mark> = 꼭 외울 것, 주황 상자 = 계산, 점선 상자 = 시험 포인트.</div>
+  </article>
+</div>
+</body>
+</html>

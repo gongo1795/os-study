@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>6장 요약 · 임계구역과 동기화</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="wrap">
+  <nav class="topnav"><a href="../index.html">← 홈</a><a href="ch05.html">← 5장</a><a href="../quiz/ch06.html">6장 문제 풀기</a><a href="ch07.html">7장 →</a><button class="btn noprint" type="button" onclick="window.print()" style="margin-left:auto">인쇄 / PDF</button></nav>
+  <article class="sheet">
+    <span class="pill" style="color:var(--calc);border-color:var(--calc)">기말 범위 · 비중 큼</span>
+    <h1>6장 임계구역과 동기화</h1>
+    <p class="sub">여러 스레드가 공유 자원을 동시에 건드릴 때 생기는 문제와 해결 도구</p>
+
+<div class="flow"><span>공유 자원</span><i>→ 동시 접근 →</i><span>경쟁 상태</span><i>→</i><span>임계구역 보호(잠금)</span><i>→</i><span>뮤텍스·스핀락·세마포어·모니터</span></div>
+
+<h2>1. 핵심 용어</h2>
+<ul class="tight">
+<li><b>경쟁 상태</b>: 2개 이상의 스레드가 공유 자원에 접근하는 <mark>순서에 따라 결과가 달라지는</mark> 상황. (예: 잔액 10만 원에 두 스레드가 동시에 10만 원씩 입금 → 둘 다 10만을 읽고 20만을 저장 → 30만이 아니라 20만)</li>
+<li><b>임계구역</b>: 공유 자원 중 둘 이상이 <mark>동시에 접근하면 안 되는</mark> 영역.</li>
+<li><b>동기화</b>: 임계구역에 들어가는 순서를 정리. 쓰고 난 뒤 다음 스레드에게 "써도 돼"라고 알리는 것도 동기화.</li>
+</ul>
+
+<h2>2. 임계구역 보호의 3가지 조건 + 위반 코드</h2>
+<div class="tbl"><table>
+<tr><th>조건</th><th>뜻</th><th>위반하는 코드 (외우기!)</th></tr>
+<tr><td><mark>상호 배제</mark></td><td>한 번에 1개만 들어감</td><td><code>while(lock==true); lock=true;</code> → 검사 후 잠그기 전에 끊기면 둘 다 들어감</td></tr>
+<tr><td><mark>한정 대기</mark></td><td>무한히 기다리는 스레드가 없어야 함</td><td><code>lock1=true; while(lock2==true);</code> → 둘 다 깃발을 들면 서로 영원히 기다림</td></tr>
+<tr><td><mark>진행의 융통성</mark></td><td>다른 스레드의 진행을 방해하면 안 됨</td><td><code>while(lock==2); … lock=2;</code> → 무조건 번갈아서만 들어감(경직된 동기화)</td></tr>
+</table></div>
+<p><b>검사와 지정(test_and_set)</b>: 검사와 잠금을 <mark>하드웨어가 원자적으로</mark> 한 번에 실행 → 상호 배제 해결. 단, 고수준 언어(C·자바)에서 쓰기 어려움.</p>
+
+<h2>3. 동기화 도구</h2>
+<div class="tbl"><table>
+<tr><th>도구</th><th>특징</th></tr>
+<tr><td>뮤텍스</td><td>공유 자원 <mark>1개</mark>. lock/unlock. 잠겨 있으면 잠들어서 기다림(바쁜 대기 X)</td></tr>
+<tr><td>스핀락</td><td>잠겨 있으면 CPU를 쓰며 계속 확인 = <mark>바쁜 대기</mark></td></tr>
+<tr><td>세마포어</td><td>공유 자원 <mark>여러 개</mark>. init(n) → wait() → [임계구역] → post()</td></tr>
+<tr><td>모니터</td><td>lock/unlock을 <mark>자동으로</mark> 처리. 자바의 <code>synchronized</code></td></tr>
+</table></div>
+<ul class="tight">
+<li>세마포어 S = 남은 자원 수. <b>wait()</b>: <code>if S &lt;= 0 then pause()</code> (자원 없으면 대기) → 아니면 S−1 하고 들어감. <b>post()</b>: S+1 하고 기다리던 스레드를 깨움.</li>
+<li><mark>공유 자원 2개, 스레드 3개 → init(2)</mark> (스레드 수가 아님!). 자원 1개면 init(1) = 이진 세마포어.</li>
+<li>세마포어 코드 순서 = wait() → post().</li>
+</ul>
+
+<h2>4. 우선순위 역전</h2>
+<p class="def"><b>우선순위 역전</b>: 임계구역 때문에 우선순위가 <mark>높은</mark> 스레드가 낮은 스레드보다 늦게 끝나는 현상. (낮은 T9가 임계구역 사용 중 → 높은 T1이 기다림 → 중간 T5가 T9의 CPU를 뺏음 → T1이 가장 늦게 끝남)</p>
+<ul class="tight">
+<li><b>우선순위 상속</b>: 임계구역을 쓰는 낮은 스레드에게 높은 우선순위를 잠깐 물려줌.</li>
+<li><b>우선순위 상한</b>: 임계구역을 쓰는 <mark>모든 스레드</mark>의 우선순위를 일정 수준까지 올림.</li>
+</ul>
+
+<div class="box exam"><div class="ttl">★ 시험 포인트</div>
+<ul class="tight">
+<li>코드 보고 어떤 조건을 위반하는지 고르기 (위 표 3줄)</li>
+<li>뮤텍스(1개) vs 세마포어(여러 개) vs 모니터(자동, synchronized), 스핀락 = 바쁜 대기</li>
+<li>wait() 첫 줄 = if S &lt;= 0 then pause(), 자원 2개 → init(2)</li>
+<li>상속 vs 상한 구분</li>
+</ul></div>
+<p class="small muted">6장에는 숫자 계산 문제가 없어서 계산 박스는 없어요. 대신 "코드 → 위반 조건" 찾기가 계산처럼 자주 나와요.</p>
+
+    <div class="foot">근거: 수업 교재 6장 본문·장 끝 요약·연습문제, 연습문제 해답(홀수). <mark>형광펜</mark> = 꼭 외울 것, 주황 상자 = 계산, 점선 상자 = 시험 포인트.</div>
+  </article>
+</div>
+</body>
+</html>

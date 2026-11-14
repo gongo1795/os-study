@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>1장 요약 · 운영체제 개요</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="wrap">
+  <nav class="topnav"><a href="../index.html">← 홈</a><a href="../quiz/mid-1-5.html">1장 문제 풀기</a><a href="ch02.html">2장 →</a><button class="btn noprint" type="button" onclick="window.print()" style="margin-left:auto">인쇄 / PDF</button></nav>
+  <article class="sheet">
+    <span class="pill">중간 + 기말 범위</span>
+    <h1>1장 운영체제 개요</h1>
+    <p class="sub">운영체제가 무엇이고, 무슨 일을 하며, 어떻게 발전해 왔는지</p>
+
+<div class="flow"><span>컴퓨터 자원</span><i>→</i><span>운영체제가 관리·보호</span><i>→</i><span>프로그램이 편하게 실행</span></div>
+
+<h2>1. 운영체제란?</h2>
+<p class="def"><b>운영체제(OS)</b> = 컴퓨터 전체(CPU·메모리·저장장치 등 자원)를 관리하고, 응용 프로그램이 실행될 <mark>환경을 제공</mark>하는 소프트웨어.</p>
+<ul class="tight">
+<li>소프트웨어 = <b>응용 프로그램</b>(한글, 워드, 웹 브라우저처럼 특정 일을 함) + <b>시스템 소프트웨어</b>(하드웨어와 응용 프로그램을 관리).</li>
+<li>시스템 소프트웨어 = <mark>운영체제</mark> + <b>유틸리티</b>(백신처럼 OS를 보조). 유틸리티는 OS 구성 요소가 아님!</li>
+</ul>
+<p class="why">비유: OS는 건물 관리실. 입주자(프로그램)는 보일러실(하드웨어)에 직접 못 들어가고, 관리실 창구(시스템 호출)에 신청만 할 수 있어요.</p>
+
+<h2>2. 역할 ↔ 목표 (짝으로 외우기)</h2>
+<div class="tbl"><table>
+<tr><th>역할</th><th>쉬운 뜻</th><th>목표</th></tr>
+<tr><td>자원 관리</td><td>CPU·메모리를 효율적으로 나눠 줌</td><td><mark>효율성</mark></td></tr>
+<tr><td>자원 보호</td><td>다른 프로그램이 함부로 못 건드리게 막음</td><td><mark>안정성</mark></td></tr>
+<tr><td>하드웨어 인터페이스</td><td>새 장치를 쉽게 붙일 수 있게 함</td><td><mark>확장성</mark></td></tr>
+<tr><td>사용자 인터페이스</td><td>사람이 쓰기 쉬운 화면·명령 제공</td><td><mark>편리성</mark></td></tr>
+</table></div>
+<p class="small">"복잡성"은 목표가 아님 (연습문제 단골 함정).</p>
+
+<h2>3. 운영체제의 구조</h2>
+<ul class="tight">
+<li>OS 구성 = <mark>커널</mark>(핵심 기능: 프로세스·메모리·파일·입출력 관리) + <b>사용자 인터페이스</b> + <b>디바이스 드라이버</b>.</li>
+<li><b>시스템 호출</b> = 커널에 <mark>자발적으로 들어가는 유일한 방법</mark>. (printf도 속에서는 시스템 호출을 부름)</li>
+<li><b>API</b> = 응용 프로그램을 만들 수 있게 제공하는 함수 모음.</li>
+<li>연결 관계: 응용 프로그램 ↔ 커널 = <mark>시스템 호출</mark> / 커널 ↔ 하드웨어 = <mark>디바이스 드라이버</mark></li>
+</ul>
+<div class="tbl"><table>
+<tr><th>커널 구조</th><th>특징</th></tr>
+<tr><td>단일형</td><td>한 덩어리. 빠르지만 한 곳이 고장 나면 전체에 영향, 수정 어려움</td></tr>
+<tr><td>계층형</td><td>비슷한 기능을 층으로 묶음(윈도우 등). 층 사이 통신 비용</td></tr>
+<tr><td>마이크로</td><td>커널엔 최소 기능만. 안정적이지만 모듈끼리 통신이 많음 (마하 커널)</td></tr>
+</table></div>
+
+<h2>4. 발전 순서 = 앞 단계의 불편을 고친 순서</h2>
+<div class="flow"><span>하드와이어링</span><i>→</i><span>폰노이만 구조</span><i>→</i><span>일괄 작업</span><i>→</i><span>대화형</span><i>→</i><span>시분할</span><i>→</i><span>분산·클라이언트-서버·P2P</span><i>→</i><span>클라우드·사물 인터넷</span></div>
+<ul class="tight">
+<li><b>하드와이어링</b>: 전선을 바꿔 끼워 프로그래밍. → <b>폰노이만 구조</b>: 프로그램을 메모리에 올려 실행.</li>
+<li><b>일괄 작업 시스템</b>: 작업을 모아 한 번에 하나씩 → <mark>멀티프로그래밍 수준 = 1</mark>.</li>
+<li><b>대화형 시스템</b>: 키보드·모니터 발명으로 주고받기 가능.</li>
+<li><b>시분할 시스템</b>: CPU 시간을 잘게 나눠 여러 작업을 번갈아 실행 = 다중 프로그래밍·다중 사용자. 일괄 작업과 반대 개념.</li>
+<li><b>실시간 시스템</b>: 정해진 시간 안에 반드시 처리. <b>임베디드 시스템</b>: CPU·메모리·화면이 작고 특정 작업만(가전제품 등).</li>
+<li><b>클라이언트-서버</b>: 서버 과부하 → <mark>P2P</mark>로 해결(서버는 목록만, 데이터는 사용자끼리). <b>사물 인터넷</b>: 가전이 인터넷에 연결.</li>
+<li>모바일: 안드로이드 = 리눅스 커널, iOS = 마하 커널(ARM 특화). 리눅스 = 무료 배포 철학(오픈 소스).</li>
+</ul>
+
+<div class="box exam"><div class="ttl">★ 시험 포인트</div>
+<ul class="tight">
+<li>역할 ↔ 목표 짝 맞추기, "OS 목표가 아닌 것 = 복잡성"</li>
+<li>커널에 자발적으로 들어가는 유일한 수단 = 시스템 호출 / 커널 ↔ 하드웨어 = 디바이스 드라이버</li>
+<li>OS 구성 요소가 아닌 것 = 유틸리티</li>
+<li>멀티프로그래밍 수준 1 = 일괄 작업, 서버 과부하 해결 = P2P</li>
+</ul></div>
+
+    <div class="foot">근거: 수업 교재 1장 본문·장 끝 요약·연습문제, 연습문제 해답(홀수). <mark>형광펜</mark> = 꼭 외울 것, 주황 상자 = 계산, 점선 상자 = 시험 포인트.</div>
+  </article>
+</div>
+</body>
+</html>

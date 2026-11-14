@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>2장 요약 · 컴퓨터의 구조와 성능 향상</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="wrap">
+  <nav class="topnav"><a href="../index.html">← 홈</a><a href="ch01.html">← 1장</a><a href="../quiz/mid-1-5.html">2장 문제 풀기</a><a href="ch03.html">3장 →</a><button class="btn noprint" type="button" onclick="window.print()" style="margin-left:auto">인쇄 / PDF</button></nav>
+  <article class="sheet">
+    <span class="pill">중간 + 기말 범위</span>
+    <h1>2장 컴퓨터의 구조와 성능 향상</h1>
+    <p class="sub">CPU·메모리·버스의 구조와, 느린 장치 때문에 생기는 손해를 줄이는 기술</p>
+
+<div class="flow"><span>CPU는 빠르고</span><i>/</i><span>메모리·저장장치·입출력은 느림</span><i>→</i><span>그 차이를 메우는 기술 모음</span></div>
+
+<h2>1. 컴퓨터의 기본 구성</h2>
+<p class="def"><b>요리사 모형</b>: 요리사 = <mark>CPU</mark>, 조리대 = <mark>메모리</mark>, 창고 = 저장장치(하드디스크·SSD). 요리는 조리대 위에서만 → <b>CPU는 메모리에 올라온 것만 처리</b>.</p>
+<ul class="tight">
+<li>메인보드 = CPU·메모리 등 부품을 연결하고 전원을 공급하는 기판.</li>
+<li>폰노이만 구조: 모든 프로그램은 메모리에 올라와야 실행된다.</li>
+</ul>
+
+<h2>2. CPU 안쪽</h2>
+<ul class="tight">
+<li>CPU = <b>산술논리 연산장치(ALU)</b>(계산) + <b>제어장치</b>(지휘) + <b>레지스터</b>(CPU 안의 초고속 메모장).</li>
+</ul>
+<div class="tbl"><table>
+<tr><th>레지스터</th><th>저장하는 것</th></tr>
+<tr><td>PC (프로그램 카운터)</td><td><mark>다음에</mark> 실행할 명령어 주소 ("현재"가 아님!)</td></tr>
+<tr><td>IR (명령어 레지스터)</td><td><mark>지금</mark> 실행 중인 명령어</td></tr>
+<tr><td>MAR (메모리 주소 레지스터)</td><td>읽고 쓸 메모리 <b>주소</b></td></tr>
+<tr><td>MBR (메모리 버퍼 레지스터)</td><td>메모리에서 가져오거나 보낼 <b>데이터</b></td></tr>
+<tr><td>상태(PSR)·플래그·조건 레지스터</td><td>연산 결과(양수/음수/0 등). 셋 다 같은 것의 다른 이름</td></tr>
+</table></div>
+<ul class="tight">
+<li>버스: <b>제어 버스</b>(제어 신호, 양방향) / <b>주소 버스</b>(메모리 주소, <mark>단방향</mark>, MAR과 연결) / <b>데이터 버스</b>(데이터, 양방향, MBR과 연결).</li>
+<li>CPU–메모리를 잇는 시스템 버스 = <b>FSB</b>(전면 버스), CPU–캐시 = <b>BSB</b>(후면 버스).</li>
+<li>32비트 CPU = 레지스터(MAR·MBR) 크기와 버스 대역폭이 32비트로 같음. 메모리 한 칸(주소 1개 = 1바이트)은 크기가 다름.</li>
+</ul>
+
+<h2>3. 부팅</h2>
+<p>전원 ON → ROM의 <b>BIOS</b>가 하드웨어 점검 → 디스크 맨 앞 <b>MBR</b>(마스터 부트 레코드)의 <mark>부트스트랩</mark> 코드 실행 → 운영체제를 메모리에 올림.</p>
+
+<h2>4. 성능 향상 기술 (속도 차이 메우기)</h2>
+<ul class="tight">
+<li><b>버퍼</b>: 속도 차이를 메우는 임시 저장 공간. <b>스풀</b>: 소프트웨어 버퍼(프린터 대기열, 한 번에 한 문서).</li>
+<li><b>캐시</b>: 앞으로 쓸 데이터를 미리 가져다 둔 곳. 있으면 <b>캐시 적중(hit)</b>, 없으면 <b>캐시 미스(miss)</b>.</li>
+<li><b>저장장치 계층구조</b>: 빠르고 작은 것(레지스터·캐시) ~ 느리고 큰 것(하드디스크)을 층층이 → 싸게 빠르고 크게. 단점: 같은 데이터가 여러 층에 있어 <mark>일관성 유지가 어려움</mark>.</li>
+<li><b>인터럽트</b>: CPU는 자기 일을 하고, 입출력이 끝나면 장치가 신호로 알려 줌. (반대: <b>폴링</b> = CPU가 계속 "끝났어?" 확인 → 낭비)</li>
+<li><b>DMA</b>(직접 메모리 접근): CPU 허락 없이 입출력 장치가 메모리에 직접 접근. <b>MMIO</b>(메모리 매핑 입출력): 메모리 일부를 입출력용으로 할당.</li>
+<li><b>사이클 훔치기</b>: CPU와 DMA가 동시에 메모리를 쓰려 할 때 입출력 장치(DMA) 쪽에 양보.</li>
+<li><b>병렬 처리</b>: 파이프라인(명령을 겹쳐 실행), 슈퍼스칼라(파이프라인 여러 개). <b>멀티프로세서</b>(CPU 여러 개) vs <b>멀티코어</b>(한 CPU 칩 안에 코어 여러 개).</li>
+</ul>
+
+<div class="box exam"><div class="ttl">★ 시험 포인트</div>
+<ul class="tight">
+<li>PC = 다음 명령어 주소 (현재 X), MAR = 주소 / MBR = 데이터</li>
+<li>단방향 버스 = 주소 버스, 버스–레지스터–데이터 짝짓기</li>
+<li>저장장치 계층구조의 단점 = 일관성 유지, 미리 가져오는 곳 = 캐시</li>
+<li>CPU 허락 없이 메모리 접근 = DMA, 메모리 일부를 입출력에 할당 = MMIO</li>
+</ul></div>
+
+    <div class="foot">근거: 수업 교재 2장 본문·장 끝 요약·연습문제, 연습문제 해답(홀수). <mark>형광펜</mark> = 꼭 외울 것, 주황 상자 = 계산, 점선 상자 = 시험 포인트.</div>
+  </article>
+</div>
+</body>
+</html>

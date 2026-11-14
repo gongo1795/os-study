@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>10장 요약 · 가상 메모리 관리</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="wrap">
+  <nav class="topnav"><a href="../index.html">← 홈</a><a href="ch09.html">← 9장</a><a href="../quiz/ch10.html">10장 문제 풀기</a><button class="btn noprint" type="button" onclick="window.print()" style="margin-left:auto">인쇄 / PDF</button></nav>
+  <article class="sheet">
+    <span class="pill" style="color:var(--calc);border-color:var(--calc)">기말 범위 · 비중 큼</span>
+    <h1>10장 가상 메모리 관리</h1>
+    <p class="sub">물리 메모리보다 큰 주소 공간을 쓰는 방법, 페이지 교체 알고리즘, 스레싱</p>
+
+<div class="flow"><span>요구 페이징</span><i>→</i><span>페이지 부재</span><i>→</i><span>페이지 교체 알고리즘</span><i>→ 너무 잦으면 →</i><span>스레싱</span><i>→</i><span>프레임 할당</span></div>
+
+<h2>1. 가상 메모리</h2>
+<ul class="tight">
+<li><b>가상 메모리</b>: 물리 메모리 크기와 상관없이 큰 논리 주소 공간을 제공. <mark>가상 메모리 크기 = 물리 메모리 + 스왑 영역</mark>.</li>
+<li><b>요구 페이징</b>: 필요한 페이지만 메모리에 올리고, 나머지는 요청할 때 가져옴.</li>
+<li><b>페이지 부재(page fault)</b>: 요청한 페이지가 메모리에 없음 → 스왑 영역에서 가져옴(메모리가 꽉 찼으면 하나를 내보냄 = <b>대상 페이지</b>).</li>
+<li><b>세그먼테이션 오류</b>: 자기 메모리 영역을 벗어난 접근 (페이지 부재와 구분!).</li>
+</ul>
+<div class="tbl"><table>
+<tr><th>PTE 플래그 비트</th><th>뜻</th></tr>
+<tr><td>접근(참조) 비트</td><td>페이지에 접근(읽기·실행)한 적이 있으면 1</td></tr>
+<tr><td>변경(더티) 비트</td><td>페이지 내용을 바꾼(쓰기) 적이 있으면 1</td></tr>
+<tr><td>유효(현재) 비트</td><td>교재 기준 <mark>0 = 메모리에 있음, 1 = 스왑 영역에 있음</mark></td></tr>
+<tr><td>읽기·쓰기·실행 비트</td><td>해당 권한</td></tr>
+</table></div>
+
+<h2>2. 페이지 교체 알고리즘</h2>
+<p class="why">교체할 페이지는 <mark>지역성</mark>(앞으로 덜 쓸 것)을 근거로 골라요.</p>
+<div class="tbl"><table>
+<tr><th>알고리즘</th><th>내보내는 페이지</th><th>특징</th></tr>
+<tr><td>무작위</td><td>아무거나</td><td>지역성 무시, 성능 나쁨</td></tr>
+<tr><td>FIFO</td><td>메모리에 <mark>가장 먼저 들어온</mark> 것</td><td>단순, <mark>성능 가장 낮음</mark>(자주 쓰는 것도 쫓아냄)</td></tr>
+<tr><td>최적(OPT)</td><td>앞으로 <mark>가장 늦게 쓰일</mark> 것</td><td>성능 최고지만 미래를 알 수 없어 <mark>구현 불가</mark></td></tr>
+<tr><td>LRU</td><td>마지막 사용 <mark>시각이 가장 오래된</mark> 것</td><td>접근 시각·카운터·참조 비트 시프트로 구현, 추가 메모리 필요</td></tr>
+<tr><td>LFU</td><td>사용 <mark>횟수가 가장 적은</mark> 것</td><td>횟수를 기록할 추가 메모리 필요</td></tr>
+<tr><td>NUR</td><td>(접근, 변경) 비트로 판단</td><td>LRU·LFU와 성능 비슷 + 공간 낭비 해결</td></tr>
+<tr><td>2차 기회</td><td>FIFO인데 성공한 페이지는 큐 맨 뒤로</td><td>FIFO보다 조금 좋음</td></tr>
+<tr><td>시계</td><td>원형 큐 + 대상 포인터, <mark>접근 비트</mark> 사용</td><td>접근 비트 1이면 0으로 바꾸고 한 번 더 기회</td></tr>
+</table></div>
+<p class="small">최적 근접 알고리즘 = LRU·LFU·NUR (과거를 보고 미래를 예측). FIFO 변형 = 2차 기회·시계.</p>
+
+<h2>3. 스레싱과 프레임 할당</h2>
+<ul class="tight">
+<li><b>스레싱</b>: 멀티프로그래밍 수준이 너무 높아 페이지 부재가 너무 많고, 페이지 교체(스왑 입출력)만 하느라 <mark>작업이 멈춘 것 같은 상태</mark>.</li>
+<li><b>정적 할당</b>: 처음에 정함 → <b>균등 할당</b>(모두 똑같이), <b>비례 할당</b>(프로세스 크기에 비례).</li>
+<li><b>동적 할당</b>: 실행 중 조절 → <b>작업 집합 모델</b>(최근 일정 시간 동안 참조된 페이지 묶음을 메모리에 유지), <b>페이지 부재 빈도</b>(부재율이 높으면 프레임 추가, 낮으면 회수).</li>
+<li>교체 범위: <b>지역 교체</b>(자기 프레임 안에서만 교체) vs <b>전역 교체</b>(전체 프레임에서 교체).</li>
+</ul>
+
+<div class="box calc"><div class="ttl">🧮 계산 1: 페이지 교체 따라가기 (교재 표 10-2, 프레임 3개)</div>
+<p>접근 순서: <b>A B C D B A B A C A</b> &nbsp; (F = 페이지 부재, S = 성공)</p>
+<ol class="steps">
+<li>처음 3개(A, B, C)는 빈 프레임이라 무조건 F</li>
+<li>꽉 찬 뒤 부재가 나면 알고리즘 규칙대로 하나를 골라 그 자리에 넣기</li>
+<li>S 개수 = 성공 횟수, F 개수 = 부재 횟수 (둘을 더하면 10)</li>
+</ol>
+<div class="tbl"><table class="mono" style="width:auto"><tr><th>FIFO</th><th>1<br>A</th><th>2<br>B</th><th>3<br>C</th><th>4<br>D</th><th>5<br>B</th><th>6<br>A</th><th>7<br>B</th><th>8<br>A</th><th>9<br>C</th><th>10<br>A</th></tr><tr><td>프레임1</td><td>A</td><td>A</td><td>A</td><td>D</td><td>D</td><td>D</td><td>D</td><td>D</td><td>C</td><td>C</td></tr><tr><td>프레임2</td><td></td><td>B</td><td>B</td><td>B</td><td>B</td><td>A</td><td>A</td><td>A</td><td>A</td><td>A</td></tr><tr><td>프레임3</td><td></td><td></td><td>C</td><td>C</td><td>C</td><td>C</td><td>B</td><td>B</td><td>B</td><td>B</td></tr><tr><td>결과</td><td style="color:var(--bad);font-weight:800">F</td><td style="color:var(--bad);font-weight:800">F</td><td style="color:var(--bad);font-weight:800">F</td><td style="color:var(--bad);font-weight:800">F</td><td style="color:var(--ok);font-weight:800">S</td><td style="color:var(--bad);font-weight:800">F</td><td style="color:var(--bad);font-weight:800">F</td><td style="color:var(--ok);font-weight:800">S</td><td style="color:var(--bad);font-weight:800">F</td><td style="color:var(--ok);font-weight:800">S</td></tr></table></div><div class="tbl"><table class="mono" style="width:auto"><tr><th>OPT</th><th>1<br>A</th><th>2<br>B</th><th>3<br>C</th><th>4<br>D</th><th>5<br>B</th><th>6<br>A</th><th>7<br>B</th><th>8<br>A</th><th>9<br>C</th><th>10<br>A</th></tr><tr><td>프레임1</td><td>A</td><td>A</td><td>A</td><td>A</td><td>A</td><td>A</td><td>A</td><td>A</td><td>A</td><td>A</td></tr><tr><td>프레임2</td><td></td><td>B</td><td>B</td><td>B</td><td>B</td><td>B</td><td>B</td><td>B</td><td>C</td><td>C</td></tr><tr><td>프레임3</td><td></td><td></td><td>C</td><td>D</td><td>D</td><td>D</td><td>D</td><td>D</td><td>D</td><td>D</td></tr><tr><td>결과</td><td style="color:var(--bad);font-weight:800">F</td><td style="color:var(--bad);font-weight:800">F</td><td style="color:var(--bad);font-weight:800">F</td><td style="color:var(--bad);font-weight:800">F</td><td style="color:var(--ok);font-weight:800">S</td><td style="color:var(--ok);font-weight:800">S</td><td style="color:var(--ok);font-weight:800">S</td><td style="color:var(--ok);font-weight:800">S</td><td style="color:var(--bad);font-weight:800">F</td><td style="color:var(--ok);font-weight:800">S</td></tr></table></div><div class="tbl"><table class="mono" style="width:auto"><tr><th>LRU</th><th>1<br>A</th><th>2<br>B</th><th>3<br>C</th><th>4<br>D</th><th>5<br>B</th><th>6<br>A</th><th>7<br>B</th><th>8<br>A</th><th>9<br>C</th><th>10<br>A</th></tr><tr><td>프레임1</td><td>A</td><td>A</td><td>A</td><td>D</td><td>D</td><td>D</td><td>D</td><td>D</td><td>C</td><td>C</td></tr><tr><td>프레임2</td><td></td><td>B</td><td>B</td><td>B</td><td>B</td><td>B</td><td>B</td><td>B</td><td>B</td><td>B</td></tr><tr><td>프레임3</td><td></td><td></td><td>C</td><td>C</td><td>C</td><td>A</td><td>A</td><td>A</td><td>A</td><td>A</td></tr><tr><td>결과</td><td style="color:var(--bad);font-weight:800">F</td><td style="color:var(--bad);font-weight:800">F</td><td style="color:var(--bad);font-weight:800">F</td><td style="color:var(--bad);font-weight:800">F</td><td style="color:var(--ok);font-weight:800">S</td><td style="color:var(--bad);font-weight:800">F</td><td style="color:var(--ok);font-weight:800">S</td><td style="color:var(--ok);font-weight:800">S</td><td style="color:var(--bad);font-weight:800">F</td><td style="color:var(--ok);font-weight:800">S</td></tr></table></div>
+<div class="tbl"><table style="width:auto">
+<tr><th>알고리즘</th><th>FIFO</th><th>OPT</th><th>LRU</th><th>LFU</th><th>2차 기회</th></tr>
+<tr><th>성공 횟수</th><td>3</td><td>5</td><td>4</td><td>5</td><td>4</td></tr>
+</table></div>
+<ul class="tight">
+<li>FIFO 4번(D): 가장 먼저 온 A 아웃 / OPT 4번(D): A는 6번, B는 5번, C는 9번에 다시 쓰임 → 가장 늦은 C 아웃</li>
+<li>LRU 6번(A): 마지막 사용 시각 B 5, C 3, D 4 → 가장 오래된 C 아웃</li>
+<li>LFU: 사용 횟수가 같으면 위쪽(먼저 있던 자리) 페이지 아웃 → 6번에서 D 아웃, 이후 전부 성공</li>
+</ul>
+</div>
+
+<div class="box calc"><div class="ttl">🧮 계산 2: NUR 순서 · 참조 비트 시프트</div>
+<ul class="tight">
+<li><b>NUR</b> (접근 비트, 변경 비트) 내보내는 순서: <mark>(0,0) → (0,1) → (1,0) → (1,1)</mark><br>접근 비트를 먼저 봄. 첫 번째 = (0,0), 두 번째 = (0,1), 세 번째 = (1,0).</li>
+<li><b>LRU 참조 비트 시프트</b>: 일정 시간마다 모든 비트를 오른쪽으로 1칸 밀고, 접근한 페이지는 맨 앞자리를 1로. → 비트를 <mark>2진수로 읽어 가장 작은 값</mark> = 가장 오래 안 쓴 페이지 = 대상.<br>예) 00111011, 10000000, 01000001, 11100000 중 → <mark>00111011</mark> (교재 연습문제 21번) (1이 많아도 맨 앞이 작으면 작음! LFU와 헷갈리지 않기)</li>
+</ul>
+</div>
+
+<div class="box exam"><div class="ttl">★ 시험 포인트</div>
+<ul class="tight">
+<li>가상 메모리 = 물리 + 스왑, 페이지 부재 vs 세그먼테이션 오류</li>
+<li>FIFO / OPT / LRU / LFU 손으로 따라가기, 성능 가장 낮은 것 = FIFO</li>
+<li>NUR 순서, 시계 = 접근 비트, LFU는 추가 메모리 필요</li>
+<li>스레싱, 작업 집합 모델, 페이지 부재 빈도 = 동적 할당</li>
+</ul></div>
+
+    <div class="foot">근거: 수업 교재 10장 본문·장 끝 요약·연습문제, 연습문제 해답(홀수). <mark>형광펜</mark> = 꼭 외울 것, 주황 상자 = 계산, 점선 상자 = 시험 포인트.</div>
+  </article>
+</div>
+</body>
+</html>
