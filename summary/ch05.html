@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>5장 요약 · CPU 스케줄링</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="wrap">
+  <nav class="topnav"><a href="../index.html">← 홈</a><a href="ch04.html">← 4장</a><a href="../quiz/mid-1-5.html">5장 문제 풀기</a><a href="ch06.html">6장 →</a><button class="btn noprint" type="button" onclick="window.print()" style="margin-left:auto">인쇄 / PDF</button></nav>
+  <article class="sheet">
+    <span class="pill">중간 + 기말 범위</span>
+    <h1>5장 CPU 스케줄링</h1>
+    <p class="sub">준비 큐에서 누구에게 먼저 CPU를 줄지 정하는 방법 + 평균 대기 시간 계산</p>
+
+<div class="flow"><span>FCFS</span><i>→ 콘보이 효과 →</i><span>SJF</span><i>→ 기아 →</i><span>HRN(에이징)</span><i>|</i><span>RR</span><i>→</i><span>SRT</span><i>→</i><span>MLQ</span><i>→</i><span>MLFQ</span></div>
+
+<h2>1. 스케줄링 단계와 목표</h2>
+<ul class="tight">
+<li><b>고수준</b>: 작업을 받을지 말지(전체 작업 수 조절). <b>중수준</b>: 일부 프로세스를 보류시켜 <mark>과부하 방지</mark>. <b>저수준</b>: 지금 누구에게 CPU를 줄지.</li>
+<li>목표: 공평성, 효율성, 안정성, 확장성, 반응 시간 보장, 무한 연기 방지. "무조건 공평"은 아님(우선순위 고려).</li>
+<li><b>선점형</b>: 실행 중인 걸 중단시키고 다른 걸 실행 가능(문맥 교환 오버헤드 큼). <b>비선점형</b>: 한 번 CPU를 받으면 끝까지.</li>
+<li>우선순위 높은 쪽: <mark>커널 &gt; 사용자, 전면 &gt; 후면, 대화형 &gt; 일괄, 입출력 집중 &gt; CPU 집중</mark>. (입출력 집중을 먼저 → 금방 CPU를 내놓고 입출력하러 가서 CPU·입출력장치가 같이 일함)</li>
+</ul>
+
+<h2>2. 알고리즘 한눈에</h2>
+<div class="tbl"><table>
+<tr><th>구분</th><th>알고리즘</th><th>방식</th><th>문제·특징</th></tr>
+<tr><td rowspan="3">비선점</td><td>FCFS (선입선출)</td><td>온 순서대로</td><td><mark>콘보이 효과</mark>(긴 작업 뒤에 줄줄이 대기)</td></tr>
+<tr><td>SJF (최단 작업 우선)</td><td>실행 시간 짧은 것 먼저</td><td><mark>기아 현상</mark>, 작업 길이를 미리 알아야 함</td></tr>
+<tr><td>HRN (최고 응답 우선)</td><td>(대기 + 실행) ÷ 실행 이 큰 것 먼저</td><td>기다린 시간 반영 = <b>에이징</b>으로 기아 완화</td></tr>
+<tr><td rowspan="4">선점</td><td>RR (라운드 로빈)</td><td>FCFS + 타임 슬라이스씩 돌아가며</td><td>우선순위 없음. 타임 슬라이스가 너무 작으면 문맥 교환 ↑</td></tr>
+<tr><td>SRT (최소 잔여 시간)</td><td>남은 시간이 가장 짧은 것 먼저(수시로 교체)</td><td>기아 가능</td></tr>
+<tr><td>MLQ (다단계 큐)</td><td>우선순위별 큐 여러 개</td><td><mark>고정</mark> 우선순위(큐 이동 X)</td></tr>
+<tr><td>MLFQ (다단계 피드백 큐)</td><td>CPU를 쓸 때마다 아래 큐로</td><td><mark>변동</mark> 우선순위, 아래 큐일수록 타임 슬라이스 ↑, 맨 아래는 FCFS</td></tr>
+</table></div>
+<p class="small">"기아가 생기는 <b>비선점</b> 알고리즘" = SJF (SRT는 선점이라 아님).</p>
+
+<h2>3. 멀티프로세서 스케줄링</h2>
+<ul class="tight">
+<li><b>프로세스 선호도</b>: 같은 프로세스의 스레드를 같은 코어에서 계속 실행(캐시 재사용).</li>
+<li><b>작업 훔치기</b>: 스레드가 많은 큐에서 빈 큐로 나눠 줌.</li>
+</ul>
+
+<div class="box calc"><div class="ttl">🧮 계산: 평균 대기 시간</div>
+<ol class="steps">
+<li><b>간트 차트</b> 그리기: 누가 몇 ms부터 몇 ms까지 CPU를 썼는지 막대로.</li>
+<li>각자 <b>대기 시간</b> = (CPU를 처음 받은 시각 − 도착 시각). 여러 번 끊기면 <mark>기다린 구간을 전부 더함</mark>.<br>
+   한 번에 구하는 공식: <mark>대기 시간 = 끝난 시각 − 도착 시각 − 실행 시간</mark></li>
+<li><b>평균 대기 시간</b> = 대기 시간의 합 ÷ 프로세스 수. (반환 시간 = 대기 시간 + 실행 시간)</li>
+</ol>
+<p><b>교재 예제</b>: P1(도착 0, 실행 30), P2(도착 3, 실행 18), P3(도착 6, 실행 9), 단위 ms</p>
+<div class="tbl"><table>
+<tr><th>알고리즘</th><th>간트 차트</th><th>대기 시간</th><th>평균</th></tr>
+<tr><td>FCFS</td><td>P1 0–30 → P2 30–48 → P3 48–57</td><td>0 + 27 + 42 = 69</td><td><b>23</b></td></tr>
+<tr><td>SJF</td><td>P1 0–30 → P3 30–39 → P2 39–57</td><td>0 + 36 + 24 = 60</td><td><b>20</b></td></tr>
+<tr><td>HRN</td><td>30ms에 P2 = (27+18)/18 = 2.5, P3 = (24+9)/9 ≈ 3.67 → P3 먼저</td><td>60</td><td><b>20</b></td></tr>
+<tr><td>RR (TS 10)</td><td>P1 0–10 → P2 10–20 → P3 20–29 → P1 29–39 → P2 39–47 → P1 47–57</td><td>27 + 26 + 14 = 67</td><td><b>22.33</b></td></tr>
+<tr><td>SRT (TS 10)</td><td>P1 0–10 → P3 10–19 → P2 19–37 → P1 37–57</td><td>27 + 16 + 4 = 47</td><td><b>15.67</b></td></tr>
+</table></div>
+<p class="small">RR 확인: P1은 10–29(19) + 39–47(8) 기다림 = 27, P2는 3–10(7) + 20–39(19) = 26, P3는 6–20 = 14.<br>
+SRT 확인: 10ms에 남은 시간 P1 20, P2 18, P3 9 → P3. 19ms에 P1 20, P2 18 → P2.</p>
+<p>👉 숫자만 바꾼 연습문제는 <a href="../quiz/mid-1-5.html">문제풀이 페이지</a>의 계산 문제에 있어요.</p>
+</div>
+
+<div class="box exam"><div class="ttl">★ 시험 포인트</div>
+<ul class="tight">
+<li>선점/비선점 분류, 콘보이 = FCFS, 기아 비선점 = SJF, 기아 해결 = 에이징(HRN)</li>
+<li>MLQ 고정 vs MLFQ 변동, 프로세스 선호도 vs 작업 훔치기</li>
+<li><b>평균 대기 시간 계산</b>(위 표 그대로 손으로 다시 풀어 보기)</li>
+</ul></div>
+
+    <div class="foot">근거: 수업 교재 5장 본문·장 끝 요약·연습문제, 연습문제 해답(홀수). <mark>형광펜</mark> = 꼭 외울 것, 주황 상자 = 계산, 점선 상자 = 시험 포인트.</div>
+  </article>
+</div>
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>9장 요약 · 페이징 메모리</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="wrap">
+  <nav class="topnav"><a href="../index.html">← 홈</a><a href="ch08.html">← 8장</a><a href="../quiz/ch09.html">9장 문제 풀기</a><a href="ch10.html">10장 →</a><button class="btn noprint" type="button" onclick="window.print()" style="margin-left:auto">인쇄 / PDF</button></nav>
+  <article class="sheet">
+    <span class="pill" style="color:var(--calc);border-color:var(--calc)">기말 범위 · 비중 큼</span>
+    <h1>9장 페이징 메모리</h1>
+    <p class="sub">메모리를 같은 크기(페이지)로 나눠 쓰는 방법과 주소 변환</p>
+
+<div class="flow"><span>논리 주소</span><i>→ &lt;P, D&gt;로 나누기 →</i><span>페이지 테이블에서 P → F</span><i>→</i><span>물리 주소 &lt;F, D&gt;</span></div>
+
+<h2>1. 페이징 vs 세그먼테이션</h2>
+<div class="tbl"><table>
+<tr><th></th><th>페이징</th><th>세그먼테이션</th></tr>
+<tr><td>나누는 단위</td><td>같은 크기(<b>페이지</b> = 논리, <b>프레임</b> = 물리)</td><td>크기가 다른 논리적 단위(<b>세그먼트</b>: 코드, 데이터 등)</td></tr>
+<tr><td>기반</td><td>고정 분할</td><td>가변 분할</td></tr>
+<tr><td>논리 주소</td><td>&lt;P, D&gt;</td><td>&lt;S, D&gt;</td></tr>
+<tr><td>단편화</td><td>내부 단편화(적음)</td><td>외부 단편화</td></tr>
+</table></div>
+<p class="small">페이징이 단순하고 하드웨어 구현이 쉬워서 현재 대부분 OS는 페이징을 사용.</p>
+
+<h2>2. 페이지 테이블</h2>
+<ul class="tight">
+<li>페이지 테이블의 한 행 = <mark>PTE</mark>(Page Table Entry). 페이지 테이블은 프로세스마다 하나, 시작 주소는 <b>PTBR</b>에 저장.</li>
+<li>페이지 테이블 행 수 = <mark>최대 프로세스 크기 ÷ 페이지 크기</mark>.</li>
+<li><b>쓰기 시점 복사</b>: fork()로 만든 자식은 처음엔 부모와 프레임을 공유하다가, <mark>쓰기가 일어날 때</mark> 그 프레임만 복사.</li>
+</ul>
+
+<h2>3. 페이지 매핑 방식 4가지</h2>
+<div class="tbl"><table>
+<tr><th>방식</th><th>설명</th></tr>
+<tr><td>직접 매핑</td><td>페이지 테이블 전체를 메모리에 두고 바로 변환</td></tr>
+<tr><td>연관 매핑</td><td>페이지 테이블 일부를 <mark>TLB</mark>(변환 색인 버퍼)에 캐시. TLB에 있으면 적중(빠름), 없으면 미스 → 메모리의 테이블 확인</td></tr>
+<tr><td>역 매핑</td><td><mark>물리 메모리의 프레임</mark>을 기준으로 테이블 하나만 만듦(테이블 작음, 변환 느림)</td></tr>
+<tr><td>다단계 매핑</td><td>테이블을 나눠 상위 테이블이 관리, 주소가 &lt;P1, P2, D&gt;처럼 여러 단계</td></tr>
+</table></div>
+<ul class="tight">
+<li><b>지역성</b>: 기억 장치에 접근하는 패턴이 한쪽에 몰리는 성질. <b>공간 지역성</b>(근처 데이터에 또 접근), <b>시간 지역성</b>(최근 쓴 데이터를 또 씀), <b>순차 지역성</b>(순서대로 접근). TLB가 잘 맞는 이유.</li>
+</ul>
+
+<h2>4. 세그먼테이션</h2>
+<ul class="tight">
+<li>세그먼테이션 매핑 테이블 = <b>시작 주소 + 제한 크기</b>(세그먼트 크기).</li>
+<li>D가 제한 크기보다 크면 → <mark>트랩</mark>(영역을 벗어난 인터럽트) → 프로세스 강제 종료, <mark>세그먼테이션 오류</mark> 메시지.</li>
+</ul>
+
+<div class="box calc"><div class="ttl">🧮 계산 1: 페이징 주소 변환 (가장 많이 나옴!)</div>
+<ol class="steps">
+<li><b>P</b>(페이지 번호) = 논리 주소 ÷ 페이지 크기의 <mark>몫</mark></li>
+<li><b>D</b>(거리, offset) = 논리 주소 ÷ 페이지 크기의 <mark>나머지</mark></li>
+<li>페이지 테이블에서 P번 행을 보고 <b>F</b>(프레임 번호)를 찾음</li>
+<li><b>물리 주소 = F × 페이지 크기 + D</b> (또는 &lt;F, D&gt;로 표현)</li>
+</ol>
+<p><b>교재 연습문제 표</b> (페이지 크기 10B)</p>
+<div class="tbl"><table style="width:auto"><tr><th>페이지</th><td>0</td><td>1</td><td>2</td><td>3</td><td>4</td></tr><tr><th>프레임</th><td>2</td><td>3</td><td>4</td><td>1</td><td>0</td></tr></table></div>
+<ul class="tight">
+<li>논리 19번지: 19 ÷ 10 → P 1, D 9 → 페이지 1은 프레임 3 → 3×10 + 9 = <mark>39번지</mark></li>
+<li>논리 43번지: P 4, D 3 → 프레임 0 → 0×10 + 3 = <mark>3번지</mark></li>
+<li>논리 42번지를 &lt;F, D&gt;로: P 4 → F 0, D 2 → <mark>&lt;0, 2&gt;</mark> (&lt;4, 2&gt;는 변환 전 &lt;P, D&gt;라서 함정)</li>
+<li>페이지 크기가 2의 거듭제곱일 때: 2<sup>9</sup> = 512 → 2049 ÷ 512 = 몫 4, 나머지 1 → <mark>&lt;4, 1&gt;</mark></li>
+</ul>
+</div>
+
+<div class="box calc"><div class="ttl">🧮 계산 2: 페이지 테이블 크기 · 세그먼테이션</div>
+<ul class="tight">
+<li><b>행 수 = 2<sup>시스템 비트</sup> ÷ 페이지 크기</b> → 지수끼리는 <mark>빼기</mark><br>예) 16비트, 페이지 2<sup>10</sup>B → 2<sup>16</sup> ÷ 2<sup>10</sup> = 2<sup>6</sup> = <mark>64행</mark><br>예) 32비트, 페이지 4KB(2<sup>12</sup>) → 2<sup>32−12</sup> = 2<sup>20</sup>행</li>
+<li><b>세그먼테이션</b>: ① D &lt; 제한 크기인지 확인 → ② 물리 주소 = 시작 주소 + D<br>예) 세그먼트 2 (시작 630, 제한 170), LA = &lt;2, 80&gt; → 80 &lt; 170 OK → 630 + 80 = <mark>710번지</mark><br>LA = &lt;2, 200&gt; → 200 &gt; 170 → <mark>트랩</mark></li>
+</ul>
+</div>
+
+<div class="box exam"><div class="ttl">★ 시험 포인트</div>
+<ul class="tight">
+<li>P = 몫, D = 나머지, 물리 주소 계산 (표 보고 변환)</li>
+<li>PTE, TLB(연관 매핑), 역 매핑 = 프레임 기준, 다단계 = &lt;P1, P2, D&gt;</li>
+<li>쓰기 시점 복사, 공간 지역성, 세그먼테이션 트랩</li>
+</ul></div>
+
+    <div class="foot">근거: 수업 교재 9장 본문·장 끝 요약·연습문제, 연습문제 해답(홀수). <mark>형광펜</mark> = 꼭 외울 것, 주황 상자 = 계산, 점선 상자 = 시험 포인트.</div>
+  </article>
+</div>
+</body>
+</html>
